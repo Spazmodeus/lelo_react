@@ -4,8 +4,8 @@ import Visualizer from './Visualizer';
 const AdvancedMotorFunction = ({ motor, lelo }) => {
   const [mainSpeed, setMainSpeed] = useState(0);
   const [vibeSpeed, setVibeSpeed] = useState(0);
-  const [mainMotorAdv, setMainMotorAdv] = useState([0,0,0,0])
-  const [vibeMotorAdv, setVibeMotorAdv] = useState([0,0,0,0])
+  const [mainMotorAdv, setMainMotorAdv] = useState([0,0,1,0])
+  const [vibeMotorAdv, setVibeMotorAdv] = useState([0,0,1,0])
   const [togglePlay, setTogglePlay] = useState(false)
   const [operationInProgress, setOperationInProgress] = useState(false); // GATT operation flag
 
@@ -46,9 +46,11 @@ const AdvancedMotorFunction = ({ motor, lelo }) => {
   }, [mainMotorAdv])
 
   return (
-    <div>
-      <Visualizer vibeMotorAdv={vibeMotorAdv} mainMotorAdv={mainMotorAdv} togglePlay={togglePlay} color={'red'}/>
-      <Visualizer mainMotorAdv={vibeMotorAdv} togglePlay={togglePlay} color={'blue'}/>
+    <div className='adv-motor-wrapper'>
+      <div className='visualizer-wrapper'>
+        <Visualizer vibeMotorAdv={vibeMotorAdv} mainMotorAdv={mainMotorAdv} togglePlay={togglePlay} color={'white'}/>
+        <Visualizer mainMotorAdv={vibeMotorAdv} togglePlay={togglePlay} color={'white'}/>
+      </div>
 <section className="patterns">
     <div>
       <button onClick={() => setTogglePlay(prev => prev === true ? false : true)}>{togglePlay? 'Pause' : 'Play'}</button>

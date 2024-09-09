@@ -1,21 +1,26 @@
 import React, {useState, useEffect} from 'react';
-import { XYPlot, LineSeries, XAxis, YAxis } from 'react-vis';
+import { VictoryChart, VictoryLine, VictoryTheme, VictoryAxis } from 'victory';
 
 const SineWaveChart = ({ dataPoints, minSpeed, maxSpeed, color }) => {
-    const [xDom, setXDom] = useState([0,100])
-
-
-    useEffect(() => {
-        if(dataPoints.length){
-            // console.log(dataPoints[0].x, dataPoints[dataPoints.length-1].x)
-        }
-    }, [dataPoints])
     return (
-        <XYPlot height={100} width={500} xType="linear" yDomain={[0, 100]}>
-            {/* <XAxis /> */}
-            {/* <YAxis /> */}
-            <LineSeries data={dataPoints} curve="curveMonotoneX" style={{ stroke: color, fill: 'none', strokeWidth: 3 }} />
-        </XYPlot>
+        <div className='chart-wrapper'>
+            <VictoryChart
+                domain={{x: [dataPoints.length ? dataPoints[0].x : 0, dataPoints.length ? dataPoints[dataPoints.length - 1].x : 100], y: [0, 100]}}
+                height={200}
+                
+            >
+                                <VictoryAxis tickFormat={() => ''} />
+                                <VictoryAxis dependentAxis tickFormat={() => ''} />
+                <VictoryLine
+                    interpolation={'monotoneX'}
+                    data={dataPoints} // The data to plot
+                    style={{
+                        labels: {opacity: 0},
+                        data: { stroke: "#c43a31" } // Customize line color
+                    }}
+                />
+            </VictoryChart>
+        </div>
     );
 };
 

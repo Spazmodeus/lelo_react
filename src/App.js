@@ -4,24 +4,23 @@ import { useState, useEffect } from 'react';
 import Connect from './Connect';
 import { leloF1SdkConstants, leloF1SdkDeviceDefinitions, leloF1SdkConverters } from './scripts';
 import Home from './Home';
-
+import battery from './battery-100.svg'
+import BatteryMonitor from './BatteryMonitor';
 
 const BluetoothDevice = require('web-bluetooth');
 
 function App() {
 
   const [connected, setConnected] = useState(true)
-  const [batt, setBatt] = useState()
+  const [batt, setBatt] = useState(0)
   const [motor, setMotor] = useState()
   const [lelo, setLelo] = useState()
 
   return (
     <div className="App">
       <header className="App-header">
-        <div>
-          <p>
-            {batt}
-          </p>
+        <div className='batt-monitor'>
+            <BatteryMonitor level={batt}/>
         </div>
       </header>
     {!connected &&

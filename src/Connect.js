@@ -20,7 +20,7 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     const [secAuth, setSecAuth] = useState(false)
     const [motorCharateristic, setMotorCharacteristic] = useState()
     const [batteryLevelCharacteristic, setBatteryLevelCharacteristic] = useState()
-    const [batteryLevel, setBatteryLevel] = useState()
+    const [batteryLevel, setBatteryLevel] = useState(50)
     const [telemetry, setTelemetry] = useState()
     const [staticValues, setStaticValues] = useState()
 

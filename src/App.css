@@ -1,5 +1,54 @@
+@import "~@flaticon/flaticon-uicons/css/all/all";
+
 .App {
   text-align: center;
+}
+
+.batt-monitor{
+  width: 50px;
+  height: 50px;
+}
+
+.visualizer-wrapper{
+  width: 100vw;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: -10px;
+  div:nth-child(1){
+    height: 50%
+  }
+}
+
+.adv-motor-wrapper{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    background: linear-gradient(16deg, black, #6a1212);
+    color: white;
+    text-shadow: 0.1px 0.1px 5px white;
+}
+
+.chart-wrapper{
+  height: 100% !important;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  .VictoryContainer{
+    height: 100%;
+    width: 17%;
+    user-select: none;
+    pointer-events: none;
+    touch-action: none;
+    position: relative;
+  }
 }
 
 .patterns{
@@ -7,11 +56,8 @@
   flex-direction: row;
   justify-content: center;
   align-items: flex-end;
-  margin-top: 10px
-}
-
-.rv-xy-plot{
-  position: absolute;
+  margin-top: 10px;
+  z-index: 5000;
 }
 
 .motor-slider{
