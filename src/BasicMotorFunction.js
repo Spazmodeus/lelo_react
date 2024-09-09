@@ -6,31 +6,31 @@ const BasicMotorFunction = ({ motor, lelo }) => {
   const [operationInProgress, setOperationInProgress] = useState(false); // GATT operation flag
 
   const setMotorSpeed = async (main, vibe) => {
-    // if (!main) main = 0;
-    // if (!vibe) vibe = 0;
+    if (!main) main = 0;
+    if (!vibe) vibe = 0;
 
-    // // Prevent overlapping GATT operations
-    // if (operationInProgress) {
-    //   console.log('GATT operation already in progress.');
-    //   return;
-    // }
+    // Prevent overlapping GATT operations
+    if (operationInProgress) {
+      console.log('GATT operation already in progress.');
+      return;
+    }
 
-    // if (main < 0x65 && vibe < 0x65) {
-    //   try {
-    //     setOperationInProgress(true); // Lock GATT operations
-    //     const data = new Uint8Array([0x01, main, vibe]);
-    //     const characteristic = await lelo.find(
-    //       (char) => char.uuid === '0000fff1-0000-1000-8000-00805f9b34fb'
-    //     );
-    //     await characteristic.writeValue(data); // Ensure you wait for the operation to complete
-    //   } catch (error) {
-    //     console.log(error);
-    //   } finally {
-    //     setOperationInProgress(false); // Unlock GATT operations when done
-    //   }
-    // }
-    // setMainSpeed(main);
-    // setVibeSpeed(vibe);
+    if (main < 0x65 && vibe < 0x65) {
+      try {
+        setOperationInProgress(true); // Lock GATT operations
+        const data = new Uint8Array([0x01, main, vibe]);
+        const characteristic = await lelo.find(
+          (char) => char.uuid === '0000fff1-0000-1000-8000-00805f9b34fb'
+        );
+        await characteristic.writeValue(data); // Ensure you wait for the operation to complete
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setOperationInProgress(false); // Unlock GATT operations when done
+      }
+    }
+    setMainSpeed(main);
+    setVibeSpeed(vibe);
   };
 
   return (

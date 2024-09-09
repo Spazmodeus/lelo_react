@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
-const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected, setBatt, setMot, setLeloChar }) => {
+const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected, setBatt, setMot, setLeloChar, startConnection, setDevTel }) => {
 
-    const [startConn, setStartConn] = useState()
     const [device, setDevice] = useState()
+    
+    const [msgArray, setMsgArray] = useState([])
     const [server, setServer] = useState()
     const [leloService, setLeloService] = useState()
     const [batteryService, setBatteryService] = useState()
     const [informationService, setInformationService] = useState()
-    const [lelocharacteristic, setLelocharacteristic] = useState()
+    
     const [batterycharacteristic, setBatterycharacteristic] = useState()
     const [informationcharacteristic, setInformationcharacteristic] = useState()
     const [securitycharacteristic, setSecuritycharacteristic] = useState()
@@ -20,9 +21,12 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     const [secAuth, setSecAuth] = useState(false)
     const [motorCharateristic, setMotorCharacteristic] = useState()
     const [batteryLevelCharacteristic, setBatteryLevelCharacteristic] = useState()
-    const [batteryLevel, setBatteryLevel] = useState(50)
+    const [batteryLevel, setBatteryLevel] = useState()
+    
     const [telemetry, setTelemetry] = useState()
     const [staticValues, setStaticValues] = useState()
+    const [userMessage, setUserMessage] = useState('')
+    const [lelocharacteristic, setLelocharacteristic] = useState()
 
     // async function getAllCharacteristics(service) {
     //     const characteristics = await service.getCharacteristics();
@@ -52,13 +56,13 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     }
 
     const setNotifications = async () => {
-        console.log('starting notifications')
+        setUserMessage('starting notifications')
         let array = ["ACCELEROMETER", "ADVANCED_MOTOR_CONTROL", "BUTTON", "CHIP_ID", "HALL", "LENGTH", "MAC_ADDRESS", "MOTOR_CONTROL", "PRESSURE", "SECURITY_ACCESS", "SERIAL_NUMBER", "USER_RECORD"]
         for (const val of array) {
             
             const char = Object.entries(leloF1SdkDeviceDefinitions).find((def) => def[0] === val)[1]
             const foundChar = lelocharacteristic.find((ch) => ch.uuid === char)
-            console.log(foundChar)
+            // setUserMessage(foundChar)
             if(foundChar.properties.notify){
       
               const notif = await foundChar.startNotifications();
@@ -87,7 +91,7 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     }
 
     const securityAuthorized = async () => {
-        console.log('User authorized....Stopping motors')
+        setUserMessage('User authorized....Stopping motors')
         setSecAuth(true)
     }
 
@@ -111,9 +115,9 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
         try {
             const secBytes = new Uint8Array(securityValue.buffer);
             const secHexString = Array.from(secBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-            console.log('Confirming security access...', secHexString, securityValue);
+            setUserMessage('Confirming security access...', secHexString, securityValue);
             await securitycharacteristic.writeValue(securityValue)
-            console.log('Security access confirmed.', secHexString);
+            setUserMessage('Security access confirmed.', secHexString);
             checkSecurityAccess(securitycharacteristic, secHexString, securityValue)
         } catch (error) {
             console.error('Error writing security access:', error);
@@ -136,81 +140,81 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
             const value = await securitycharacteristic.readValue()
             setSecurityValue(value)
         } catch (error) {
-            console.log('cant read security value')
+            setUserMessage('cant read security value')
         }
     }
 
     const startNotifications = async () => {
         try{
-            console.log('starting button notifications')
+            setUserMessage('starting button notifications')
             await buttoncharacteristic.startNotifications()
             setButtonNotifications(true)
         } catch (error) {
-            console.log('cant start button notifications')
+            setUserMessage('cant start button notifications')
         }
     }
 
     const updateButton = async () => {
-        console.log('Checking Button characteristic...');
+        setUserMessage('Checking Button characteristic...');
         try {
             const buttonChar = await lelocharacteristic.find((char) => char.uuid === '00000aa4-0000-1000-8000-00805f9b34fb')
             setButtoncharacteristic(buttonChar)
-            console.log('Listening for button press...')
+            setUserMessage('Listening for button press...')
         } catch (error) {
-            console.log('cant find button char')
+            setUserMessage('cant find button char')
         }
     }
 
     const getSecurity = async () => {
-        console.log('Checking Security Access characteristic...');
+        setUserMessage('Checking Security Access characteristic...');
         try{
             const securityChar = await lelocharacteristic.find((char) => char.uuid === '00000a10-0000-1000-8000-00805f9b34fb')
             await setSecuritycharacteristic(securityChar)
 
         } catch (error) {
-            console.log('cant find sec char')
+            setUserMessage('cant find sec char')
         }
-        console.log('DONE')
+        setUserMessage('DONE')
     }
 
     const getChar = async () => {
-        console.log('getting lelo char')
+        setUserMessage('getting lelo char')
         let leloChar = await leloService.getCharacteristics()
         await setLelocharacteristic(leloChar)
-        console.log('DONE')
-        console.log('getting batt char')
+        setUserMessage('DONE')
+        setUserMessage('getting batt char')
         let battChar = await batteryService.getCharacteristics()
         await setBatterycharacteristic(battChar)
-        console.log('DONE')
-        console.log('getting info char')
+        setUserMessage('DONE')
+        setUserMessage('getting info char')
         let infoChar = await informationService.getCharacteristics()
         await setInformationcharacteristic(infoChar)
-        console.log('DONE')
+        setUserMessage('DONE')
     }
 
     const getServices = async () => {
-        console.log('getting lelo svc')
+        setUserMessage('getting lelo svc')
         const leloSvc = await server.getPrimaryService(leloF1SdkDeviceDefinitions.LELO_SERVICE);
         await setLeloService(leloSvc)
-        console.log('DONE')
-        console.log('getting batt svc')
+        setUserMessage('DONE')
+        setUserMessage('getting batt svc')
         const battSvc = await server.getPrimaryService(leloF1SdkDeviceDefinitions.BATTERY_SERVICE);
         await setBatteryService(battSvc)
-        console.log('DONE')
-        console.log('getting info svc')
+        setUserMessage('DONE')
+        setUserMessage('getting info svc')
         const infSvc = await server.getPrimaryService(leloF1SdkDeviceDefinitions.DEVICE_INFORMATION_SERVICE);
         await setInformationService(infSvc)
-        console.log('DONE')
+        setUserMessage('DONE')
     }
 
     const connectGATT = async () => {
-        console.log('Connecting to GATT Server...')
+        setUserMessage('Connecting to GATT Server...')
         const GATT = await device.gatt.connect()
         setServer(GATT)
     }
 
     const reqDev = async () => {
-        console.log('requesting device')
+        setUserMessage('requesting device')
         const getDevice = await navigator.bluetooth.requestDevice({
             filters: leloF1SdkConstants.COMPATIBLE_DEVICE_NAMES.map(name => ({ name })),
             optionalServices: [leloF1SdkDeviceDefinitions.LELO_SERVICE, ...leloF1SdkConstants.OPTIONAL_SERVICES]
@@ -220,8 +224,18 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     }
 
     useEffect(() => {
-        if(startConn){reqDev()}
-    }, [startConn])
+        if(userMessage){
+            console.log(userMessage)
+            setMsgArray(prev => [
+                ...prev,
+                <p>{userMessage}</p>
+            ]);
+        }
+    }, [userMessage])
+
+    useEffect(() => {
+        if(startConnection){reqDev()}
+    }, [startConnection])
 
     useEffect(() => {
         if(device){connectGATT()}
@@ -253,7 +267,7 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     useEffect(() => {
         if(buttonNotifications){
             const onButtonPressed = async () => {
-                console.log('Button press detected, re-checking security...');
+                setUserMessage('Button press detected, re-checking security...');
                 buttoncharacteristic.removeEventListener('characteristicvaluechanged', onButtonPressed);
                 setTimeout(() => {
                     buttoncharacteristic.addEventListener('characteristicvaluechanged', onButtonPressed);
@@ -274,7 +288,7 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
 
     useEffect(() => {
         if(hexString){
-            console.log('checking hex',hexString)
+            setUserMessage('checking hex')
             if(hexString === '0f94793001d9f090'){
                 setSecurityAccess()
             }
@@ -289,7 +303,7 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
         const stop = async () => {
             const stopCommand = new Uint8Array([0x01, 0xFF, 0x00]);
             await motorCharateristic.writeValue(stopCommand);
-            console.log('Motors stopped successfully');
+            setUserMessage('Motors stopped successfully');
         }
         if(motorCharateristic){
             stop()
@@ -306,7 +320,6 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
 
     useEffect(() => {
         if(batteryLevel){
-            console.log(batteryLevel)
             setConnected(true)
             setBatt(batteryLevel)
         }
@@ -314,72 +327,14 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
     }, [batteryLevel])
 
     useEffect(() => {
-        // console.log(telemetry)
+        setDevTel(telemetry)
     }, [telemetry])
 
     return (
-        <div className="pageOverlay">
-        <div className="arrow"><p>Click here</p></div>
-        <div className="cylinder">
-          <svg className="display" width="100" height="200" xmlns="http://www.w3.org/2000/svg">
-
-            <ellipse cx="50" cy="190" rx="50" ry="10" style={{fill: '#666'}} />
-            <ellipse cx="50" cy="186" rx="50" ry="9" style={{fill: '#464646'}} />
-            
-
-            <rect x="0" y="10" width="100" height="45" style={{fill: 'url(#grad1)'}} />
-            <rect x="36" y="35" width="30" height="12" style={{fill: '#595959;" filter="url(#redShadow)'}} />
-            <rect x="0" y="55" width="100" height="90" style={{fill: 'url(#grad2)'}} />
-            <rect x="0" y="145" width="100" height="45" style={{fill: 'url(#grad1)'}} />
-            <rect x="36" y="160" width="30" height="12" style={{fill: '#595959'}} filter="url(#redShadow)" />
-            
-
-            <ellipse cx="50" cy="10" rx="50" ry="10" style={{fill: '#2d2626'}} />
-            <ellipse cx="50" cy="13" rx="50" ry="10" style={{fill: '#2d2626'}}/>
-            <ellipse id="topRing" cx="50" cy="9" rx="46" ry="9" style={{fill: '#666666'}} filter="url(#whiteShadow)" />
-            <ellipse cx="50" cy="9" rx="42" ry="6" style={{fill: '#2d2626'}} />
-            <ellipse onClick={() => setStartConn(true)} id="topButton" cx="50" cy="9" rx="17" ry="4" style={{fill: '#666666'}} filter="url(#whiteShadow)" />
-            
-
-            <defs>
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="10%" style={{stopColor: '#666', stopOpacity: 1}} />
-                <stop offset="30%" style={{stopColor: '#a4a4a4', stopOpacity: 1}} />
-                <stop offset="70%" style={{stopColor: '#a4a4a4', stopOpacity: 1}} />
-                <stop offset="90%" style={{stopColor: '#666', stopOpacity: 1}} />
-              </linearGradient>
-              <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="10%" style={{stopColor: '#232323', stopOpacity: 1}} />
-                <stop offset="30%" style={{stopColor: '#a4a4a4', stopOpacity: 1}} />
-                <stop offset="70%" style={{stopColor: '#a4a4a4', stopOpacity: 1}} />
-                <stop offset="90%" style={{stopColor: '#232323', stopOpacity: 1}} />
-              </linearGradient>
-              <filter id="redShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                <feOffset in="blur" dx="0" dy="0" result="offsetBlur"/>
-                <feFlood id="redShadowColor" floodColor="red" result="color"/>
-                <feComposite in="color" in2="offsetBlur" operator="in" result="redShadow"/>
-                <feMerge>
-                  <feMergeNode in="redShadow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-              <filter id="whiteShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                <feOffset in="blur" dx="0" dy="0" result="offsetBlur"/>
-                <feFlood id="whiteShadowColor" floodColor="white" result="color"/>
-                <feComposite in="color" in2="offsetBlur" operator="in" result="whiteShadow"/>
-                <feMerge>
-                  <feMergeNode in="whiteShadow"/>
-                  <feMergeNode in="SourceGraphic"/> 
-                </feMerge>
-              </filter>
-            </defs>
-          </svg>
-          <h6 className="status"></h6>
-        </div>
-        </div>
-    );
+        <>
+            <p className='msg-array'>{msgArray}</p>
+        </>
+    )
 };
 
 export default Connect;

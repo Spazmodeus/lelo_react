@@ -1,91 +1,142 @@
 import React, { useEffect, useState } from 'react';
-import SineWaveChart from './SineWaveChart';
+import { VictoryChart, VictoryLine, VictoryTheme, VictoryAxis } from 'victory';
 
-const Visualizer = ({ mainMotorAdv, togglePlay, color}) => {
-    const [currentMain, setCurrentMain] = useState(mainMotorAdv[1]); // Start at the min speed
-    const [increasing, setIncreasing] = useState(true);
-    const [holding, setHolding] = useState(false);
-    const [dataPoints, setDataPoints] = useState([]); // Track motor speed data points
-    const [time, setTime] = useState(0); // To track the x-axis over time
+const Visualizer = ({ motors, playPause }) => {
+  const [vibeData, setVibeData] = useState([]);
+  const [mainData, setMainData] = useState([]);
 
-    const addDataPoint = (newPoint) => {
-        setDataPoints((prevPoints) => {
-            const updatedPoints = [...prevPoints, newPoint];
-            if (updatedPoints.length > 2000) { // Keep a fixed number of points to simulate scrolling
-                updatedPoints.shift(); // Remove the oldest point
-            }
-            return updatedPoints;
-        });
-    };
+  // Normalize time to fit within 2000 ms window
+  const normalizeTime = (points, totalTime) => {
+    const normalizedPoints = points.map(point => ({
+      x: (point.x / totalTime) * 2000, // Scale time to 2000 ms
+      y: point.y
+    }));
+    return normalizedPoints;
+  };
 
-    useEffect(() => {
-        let intervalId;
+  // Generate time-series data based on the motor pattern
+  const generatePatternData = (motor) => {
+    const { max, min, highTime, lowTime, pattern } = motor;
+    const points = [];
+    let currentTime = 0;
 
-        if (togglePlay && !holding) {
-            intervalId = setInterval(() => {
-                setCurrentMain(prev => {
-                    let newMain = prev;
+    // Depending on the pattern type, generate data
+    switch (pattern) {
+      case '0x02': // Simple alternating pattern
+        for (let i = 0; i < 50; i++) {
+          // High phase
+          points.push({ x: currentTime, y: max });
+          currentTime += highTime;
 
-                    // Ramp up logic
-                    if (increasing && prev >= mainMotorAdv[0]) {
-                        setHolding(true); // Start holding at max
-                        const holdInterval = setInterval(() => {
-                            // Continue adding the max speed but progress the time
-                            setTime(prevTime => prevTime + mainMotorAdv[2] / 1000); // Increment time
-                            addDataPoint({ x: time, y: mainMotorAdv[0] }); // Hold max speed
-                        }, mainMotorAdv[2]); // Continue adding points during the hold time
-                        
-                        setTimeout(() => {
-                            setHolding(false); // Stop holding after the specified hold time
-                            clearInterval(holdInterval); // Clear the hold interval
-                        }, mainMotorAdv[3]); // Hold for the specified time at max
-
-                        setIncreasing(false); // After hold, reverse direction
-                        return prev; // Keep motor speed at max during hold
-                    } 
-                    // Ramp down logic
-                    else if (!increasing && prev <= mainMotorAdv[1]) {
-                        setIncreasing(true);
-                        newMain = prev; // Stay at min
-                    } 
-                    // Continue ramping up or down
-                    else {
-                        newMain = increasing ? prev + 1 : prev - 1;
-                    }
-
-                    // Increment time to simulate continuous flow
-                    setTime(prevTime => prevTime + mainMotorAdv[2] / 1000); // Increment time by interval (in seconds)
-
-                    // Directly add motor speed as data points
-                    addDataPoint({ x: time, y: newMain }); // Add the motor speed point
-
-                    return newMain;
-                });
-            }, mainMotorAdv[2]); // Control the interval speed using the ramp time
+          // Low phase (if the duration is greater than 0)
+          if (lowTime > 0) {
+            points.push({ x: currentTime, y: min });
+            currentTime += lowTime;
+          }
         }
+        break;
 
-        return () => clearInterval(intervalId);
-    }, [togglePlay, holding, increasing, mainMotorAdv, time]);
+      case '0x03': // Example of a different pattern
+        for (let i = 0; i < 50; i++) {
+          // Start low, then go high
+          points.push({ x: currentTime, y: min });
+          currentTime += lowTime;
 
-    return (
-        <div>
-            {/* Pass motor speed data directly to SineWaveChart */}
-            <SineWaveChart dataPoints={dataPoints} minSpeed={mainMotorAdv[1]} maxSpeed={mainMotorAdv[0]} color={color}/>
+          points.push({ x: currentTime, y: max });
+          currentTime += highTime;
+        }
+        break;
 
-            <span className='motor-slider'>
-                <h5>Motor Speed</h5>
-                <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={currentMain}
-                    step="1"
-                    id="motorSpeed"
-                />
-                <p>Current Speed: {currentMain}</p>
-            </span>
-        </div>
-    );
+      default: // Default pattern (simple sine wave-like pattern)
+        for (let i = 0; i < 50; i++) {
+          points.push({ x: currentTime, y: min });
+          currentTime += lowTime;
+
+          points.push({ x: currentTime, y: max });
+          currentTime += highTime;
+        }
+        break;
+    }
+
+    return { points, totalTime: currentTime }; // Return points and total time for normalization
+  };
+
+  // Update the chart data for both motors
+  const displayCharts = () => {
+    const { points: vibePoints, totalTime: vibeTotalTime } = generatePatternData({
+      max: motors[0][0], // vibeMax
+      min: motors[0][1], // vibeMin
+      highTime: motors[0][2], // vibeHigh (Time at max)
+      lowTime: motors[0][3], // vibeLow (Time at min)
+      pattern: motors[0][4], // vibePattern
+    });
+
+    const { points: mainPoints, totalTime: mainTotalTime } = generatePatternData({
+      max: motors[1][0], // mainMax
+      min: motors[1][1], // mainMin
+      highTime: motors[1][2], // mainHigh (Time at max)
+      lowTime: motors[1][3], // mainLow (Time at min)
+      pattern: motors[1][4], // mainPattern
+    });
+
+    // Normalize the time points to fit within 2000 ms
+    const normalizedVibeData = normalizeTime(vibePoints, 2000);
+    const normalizedMainData = normalizeTime(mainPoints, 2000);
+
+    // Set the data separately for each chart
+    setVibeData(normalizedVibeData);
+    setMainData(normalizedMainData);
+  };
+
+  useEffect(() => {
+    if (motors) {
+      displayCharts();
+    }
+  }, [motors]);
+
+  return (
+    <div>
+      <div className='chart-wrapper'>
+        {/* Chart for Vibe Motor */}
+        <VictoryChart height={200} theme={VictoryTheme.material}
+          domain={{
+            x: [0, 2000], // Always display 2000 ms on the x-axis
+            y: [0, 100]   // Motor speed range (0-100)
+          }}
+        >
+          <VictoryAxis tickFormat={() => ''} />
+          <VictoryAxis dependentAxis tickFormat={() => ''} />
+          <VictoryLine
+            interpolation="monotoneX"
+            data={vibeData} 
+            style={{
+              labels: { opacity: 0 }, 
+              data: { stroke: 'blue' },
+            }}
+          />
+        </VictoryChart>
+
+        {/* Chart for Main Motor */}
+        <VictoryChart height={200} theme={VictoryTheme.material}
+          domain={{
+            x: [0, 2000], // Always display 2000 ms on the x-axis
+            y: [0, 100]   // Motor speed range (0-100)
+          }}
+        >
+          <VictoryAxis tickFormat={() => ''} />
+          <VictoryAxis dependentAxis tickFormat={() => ''} />
+          <VictoryLine
+            interpolation="monotoneX"
+            data={mainData} // The data to plot for main motor
+            style={{
+              labels: { opacity: 0 }, // Hide labels
+              data: { stroke: 'green' }, // Customize line color for main motor
+            }}
+          />
+        </VictoryChart>
+      </div>
+    </div>
+  );
 };
 
 export default Visualizer;
