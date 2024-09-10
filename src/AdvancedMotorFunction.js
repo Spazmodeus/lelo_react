@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CircularSlider from '@fseehawer/react-circular-slider';
 import Visualizer from './Visualizer'
 
 const numberTo2Bytes = (num) => new Uint8Array([(num >> 8) & 0xff, num & 0xff]);
@@ -13,10 +14,10 @@ const AdvancedMotorFunction = ({ lelo }) => {
 
   // Log GATT operation status
   const logGattOperation = (operationName, promise) => {
-    console.log(`${operationName} started`);
+    // console.log(`${operationName} started`);
     promise
       .then(() => {
-        console.log(`${operationName} completed`);
+        // console.log(`${operationName} completed`);
       })
       .catch((error) => {
         console.error(`${operationName} failed:`, error);
@@ -26,17 +27,17 @@ const AdvancedMotorFunction = ({ lelo }) => {
   // Function to write motor pattern data to the GATT characteristic
   const writeMotorPatternToGatt = async (motorType, motorPattern) => {
     if (bypassGATT) {
-      console.log('Bypass mode enabled, skipping GATT operation.');
+      // console.log('Bypass mode enabled, skipping GATT operation.');
       return; // Skip GATT operation if bypass is enabled
     }
 
     if (!deviceConnected) {
-      console.log('Device is not connected. Cannot perform GATT operation.');
+      // console.log('Device is not connected. Cannot perform GATT operation.');
       return;
     }
 
     if (operationInProgress) {
-      console.log('GATT operation already in progress.');
+      // console.log('GATT operation already in progress.');
       return;
     }
 
@@ -67,7 +68,7 @@ const AdvancedMotorFunction = ({ lelo }) => {
       // Await for the operation to complete
       await writePromise;
 
-      console.log(`Motor pattern written successfully for motor type ${motorType === 1 ? 'main' : 'vibe'}`);
+      // console.log(`Motor pattern written successfully for motor type ${motorType === 1 ? 'main' : 'vibe'}`);
     } catch (error) {
       console.error('Error writing motor pattern:', error);
     } finally {
@@ -95,7 +96,7 @@ const AdvancedMotorFunction = ({ lelo }) => {
     if (togglePlay && deviceConnected) {
       handleMotorOperations(); // Ensure motor operations are done sequentially
     } else if (!togglePlay) {
-      console.log('Motor paused');
+      // console.log('Motor paused');
       handlePauseMotors();
     }
   }, [togglePlay, mainMotorAdv, vibeMotorAdv, deviceConnected]);
@@ -115,10 +116,10 @@ const AdvancedMotorFunction = ({ lelo }) => {
     <div className='adv-motor-wrapper'>
      <Visualizer motors={[mainMotorAdv, vibeMotorAdv]} playPause={togglePlay}/>
  <section className="patterns">
-        <div>
           <button onClick={() => setTogglePlay((prev) => !prev)}>
             {togglePlay ? 'Pause' : 'Play'}
           </button>
+        <div className='input-wrapper'>
           <h4>Main Motor Control</h4>
           <span>
           <select
@@ -135,91 +136,83 @@ const AdvancedMotorFunction = ({ lelo }) => {
               <option value='0x07'>////////////</option>
             </select>
             <h5>High Speed (Pmax)</h5>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={mainMotorAdv[0]}
-              step="1"
-              id="mainPmax"
-              onChange={(e) =>
-                setMainMotorAdv((prev) => [
-                  parseInt(e.target.value),
-                  prev[1],
-                  prev[2],
-                  prev[3],
-                  prev[4]
-                ])
-              }
-            />
-            <p id="mainPmaxLabel">{mainMotorAdv[0]}</p>
+            <CircularSlider
+                min={0}
+                max={100}
+                width={85}
+                label={'Pmax'}
+                continuous={false}
+                onChange={ value => { 
+                  setMainMotorAdv((prev) => [
+                    parseInt(value),
+                    prev[1],
+                    prev[2],
+                    prev[3],
+                    prev[4]
+                  ])}}
+              />
           </span>
           <span>
             <h5>Low Speed (Pmin)</h5>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={mainMotorAdv[1]}
-              step="1"
-              id="mainPmin"
-              onChange={(e) =>
-                setMainMotorAdv((prev) => [
-                  prev[0],
-                  parseInt(e.target.value),
-                  prev[2],
-                  prev[3],
-                  prev[4]
-                ])
-              }
-            />
-            <p id="mainPminLabel">{mainMotorAdv[1]}</p>
+
+            <CircularSlider
+                min={0}
+                max={100}
+                width={85}
+                label={'Pmin'}
+                continuous={false}
+                onChange={ value => { 
+                  setMainMotorAdv((prev) => [
+                    prev[0],
+                    parseInt(value),
+                    prev[2],
+                    prev[3],
+                    prev[4]
+                  ])}}
+              />
+
           </span>
           <span>
             <h5>Hold at High (T1)</h5>
-            <input
-              type="range"
-              min="1"
-              max="1000"
-              value={mainMotorAdv[2]}
-              step="50"
-              id="mainT1"
-              onChange={(e) =>
-                setMainMotorAdv((prev) => [
-                  prev[0],
-                  prev[1],
-                  parseInt(e.target.value),
-                  prev[3],
-                  prev[4]
-                ])
-              }
-            />
-            <p id="mainT1Label">{mainMotorAdv[2]}</p>
+
+            <CircularSlider
+                min={1}
+                max={1000}
+                width={85}
+                label={'T1'}
+                continuous={false}
+                onChange={ value => { 
+                  setMainMotorAdv((prev) => [
+                    prev[0],
+                    prev[1],
+                    parseInt(value),
+                    prev[3],
+                    prev[4]
+                  ])}}
+              />
           </span>
           <span>
             <h5>Hold at Low (T2)</h5>
-            <input
-              type="range"
-              min="1"
-              max="1000"
-              value={mainMotorAdv[3]}
-              step="50"
-              id="mainT2"
-              onChange={(e) =>
-                setMainMotorAdv((prev) => [
-                  prev[0],
-                  prev[1],
-                  prev[2],
-                  parseInt(e.target.value),
-                  prev[4]
-                ])
-              }
-            />
-            <p id="mainT2Label">{mainMotorAdv[3]}</p>
+
+            <CircularSlider
+                min={1}
+                max={1000}
+                width={85}
+                label={'T2'}
+                continuous={false}
+                onChange={ value => { 
+                  setMainMotorAdv((prev) => [
+                    prev[0],
+                    prev[1],
+                    prev[2],
+                    parseInt(value),
+                    prev[4]
+                  ])}}
+              />
           </span>
         </div>
 
-        <div>
+        <div className='input-wrapper'>
           <h4>Vibe Motor Control</h4>
           <span>
           <select
@@ -236,87 +229,79 @@ const AdvancedMotorFunction = ({ lelo }) => {
               <option value='0x07'>////////////</option>
             </select>
             <h5>High Speed (Pmax)</h5>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={vibeMotorAdv[0]}
-              step="1"
-              id="vibePmax"
-              onChange={(e) =>
-                setVibeMotorAdv((prev) => [
-                  parseInt(e.target.value),
-                  prev[1],
-                  prev[2],
-                  prev[3],
-                  prev[4]
-                ])
-              }
-            />
-            <p id="vibePmaxLabel">{vibeMotorAdv[0]}</p>
+            <CircularSlider
+                min={0}
+                max={100}
+                width={85}
+                label={'Pmax'}
+                continuous={false}
+                onChange={ value => { 
+                  setVibeMotorAdv((prev) => [
+                    parseInt(value),
+                    prev[1],
+                    prev[2],
+                    prev[3],
+                    prev[4]
+                  ])}}
+              />
           </span>
           <span>
             <h5>Low Speed (Pmin)</h5>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={vibeMotorAdv[1]}
-              step="1"
-              id="vibePmin"
-              onChange={(e) =>
-                setVibeMotorAdv((prev) => [
-                  prev[0],
-                  parseInt(e.target.value),
-                  prev[2],
-                  prev[3],
-                  prev[4]
-                ])
-              }
-            />
-            <p id="vibePminLabel">{vibeMotorAdv[1]}</p>
+
+            <CircularSlider
+                min={0}
+                max={100}
+                width={85}
+                label={'Pmin'}
+                continuous={false}
+                onChange={ value => { 
+                  setVibeMotorAdv((prev) => [
+                    prev[0],
+                    parseInt(value),
+                    prev[2],
+                    prev[3],
+                    prev[4]
+                  ])}}
+              />
+
           </span>
           <span>
             <h5>Hold at High (T1)</h5>
-            <input
-              type="range"
-              min="1"
-              max="1000"
-              value={vibeMotorAdv[2]}
-              step="50"
-              id="vibeT1"
-              onChange={(e) =>
-                setVibeMotorAdv((prev) => [
-                  prev[0],
-                  prev[1],
-                  parseInt(e.target.value),
-                  prev[3],
-                  prev[4]
-                ])
-              }
-            />
-            <p id="vibeT1Label">{vibeMotorAdv[2]}</p>
+
+            <CircularSlider
+                min={1}
+                max={1000}
+                width={85}
+                label={'T1'}
+                continuous={false}
+                onChange={ value => { 
+                  setVibeMotorAdv((prev) => [
+                    prev[0],
+                    prev[1],
+                    parseInt(value),
+                    prev[3],
+                    prev[4]
+                  ])}}
+              />
           </span>
           <span>
-            <h5>Hold at low (T2)</h5>
-            <input
-              type="range"
-              min="1"
-              max="1000"
-              value={vibeMotorAdv[3]}
-              step="50"
-              id="vibeT2"
-              onChange={(e) =>
-                setVibeMotorAdv((prev) => [
-                  prev[0],
-                  prev[1],
-                  prev[2],
-                  parseInt(e.target.value),
-                  prev[4]
-                ])
-              }
-            />
-            <p id="vibeT2Label">{vibeMotorAdv[3]}</p>
+            <h5>Hold at Low (T2)</h5>
+
+            <CircularSlider
+                min={1}
+                max={1000}
+                width={85}
+                label={'T2'}
+                continuous={false}
+                onChange={ value => { 
+                  setVibeMotorAdv((prev) => [
+                    prev[0],
+                    prev[1],
+                    prev[2],
+                    parseInt(value),
+                    prev[4]
+                  ])}}
+              />
           </span>
         </div>
       </section>

@@ -41,6 +41,7 @@ const Connect = ({ leloF1SdkDeviceDefinitions, leloF1SdkConstants, setConnected,
             const battLevel = value.getUint8(0);
             setBatteryLevel(battLevel)
         } catch (error) {
+            setConnected(false)
             console.error('Error reading battery level:', error);
         }
     }
