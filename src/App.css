@@ -1,23 +1,58 @@
 @import "~@flaticon/flaticon-uicons/css/all/all";
 
+body{
+  overflow: hidden;
+}
+
+.fi-brands-bluetooth{
+  color: green;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
 .App {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
+}
+
+.menu-wrapper{
+  width: 200px;
+  height: 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+.fi{
+  margin-right: 10px;
+  &:hover{
+    cursor: pointer;
+  }
+}
+}
+
+.button-wrapper{
+  width: 100%;
+  padding-top: 15px;
 }
 
 .telemetry-menu{
   position: absolute;
   font-size: 10px;
   background-color: #292929;
-  top: 91px;
-  left: 0px;
   z-index: 10000;
+  top: 79px;
 }
 
 .input-wrapper{
   height: 100%;
+  /* width: 30%; */
+  margin-left: 20px;
+  margin-right: 20px;
 }
 
 .expandable{
@@ -40,14 +75,108 @@
   justify-content: flex-end;
 }
 
+button{
+    background:    #ff0000;
+    background:    linear-gradient(#900303, #000000);
+    border:        1px solid #000000;
+    border-radius: 11px;
+    padding:       8px 20px;
+    color:         #ffffff;
+    display:       inline-block;
+    font:          normal bold 10px/1 "Calibri", sans-serif;
+    text-align:    center;
+    transition: all 0.5s ease-in-out
+}
+
+button:hover{
+    cursor: pointer;
+    box-shadow: 0px 0px 5px white;
+}
+
+select{
+  appearance: none;
+	-webkit-appearance: none;
+	width: 80%;
+	font-size: 18px;
+	padding: 5px 10px 5px 10px;
+	background-color: #FFFFFF;
+	border: 1px solid #C4D1EB;
+	border-radius: 5px;
+	color: #000000;
+	cursor: pointer;
+	outline: none;
+	box-shadow: 3px 3px 5px 3px #1b1b1b;
+}
+
+select:focus{
+  background: #F2F2F2;
+	border: 1px solid #5A7EC7;
+	border-radius: 5px;
+}
+
+select::after{
+	content: "";
+	position: absolute;
+	pointer-events: none;
+	top: 50%;
+	right: 10px;
+	transform: translate(0, -50%);
+	width: 12px;
+	height: 12px;
+	background-color: #000000;
+	clip-path: polygon(8% 17%, 0% 25%, 50% 84%, 100% 25%, 92% 17%, 50% 65%);
+}
+
+.fi-option{
+  color: black;
+  width: 30px;
+}
+
+.option{
+  height: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.pattern-options{
+  background-color: white;
+  width: 100px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.sub-header{
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  margin-left: 50px;
+}
+
 .batt-monitor{
   width: 66%;
   height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
 }
 
 .bluetooth-connect{
-  width: 33%;
+  width: 85%;
   height: 70px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
   :hover{
     cursor: pointer;
   }
@@ -62,9 +191,6 @@
   justify-content: flex-start;
   align-items: center;
   margin-bottom: -10px;
-  div:nth-child(1){
-    height: 50%
-  }
 }
 
 .tel-span{
@@ -79,42 +205,63 @@
 }
 
 .adv-motor-wrapper{
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: center;
-    background: linear-gradient(16deg, black, #6a1212);
-    color: white;
-    text-shadow: 0.1px 0.1px 5px white;
-}
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  background: linear-gradient(16deg, black, #6a1212);
+  color: white;
+  text-shadow: 0.1px 0.1px 5px white;
+  padding: 15px;
+  height: 89vh;
+  width: 50vw;
+    .visualizer-wrapper{
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+    }
+  }
+
+  .fi-br-power{
+
+    &:hover{
+      cursor: pointer;
+    }
+  }
 
 .chart-wrapper{
   height: 76% !important;
-  width: 19vw;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   .VictoryContainer{
-    height: 100%;
-    width: 17%;
+    width: 100%;
     user-select: none;
     pointer-events: none;
     touch-action: none;
     position: relative;
+    margin: -40px;
   }
 }
 
 .patterns{
+  width: 100%;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   margin-top: 10px;
   z-index: 5000;
   height: 46vh;
   overflow: overlay;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  box-shadow: inset 0px 0px 17px 2px #000000a3;
+  border-radius: 20px;
 }
 
 .motor-slider{
@@ -132,12 +279,38 @@
   }
 }
 
+.fi-arrow, .fi-br-power{
+  font-size: 20px;
+  &:hover{
+    cursor: pointer;
+    text-shadow: 0px 0px 10px red;
+  }
+}
+
+select:hover{
+  box-shadow: 0px 0px 10px 0px red
+}
+
+.controls-wrapper{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: 100%;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.batt-gauge{
+  width: 60px;
+  height: 64px;
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 10vh;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import CircularSlider from '@fseehawer/react-circular-slider';
 import Visualizer from './Visualizer'
 
@@ -10,25 +10,24 @@ const AdvancedMotorFunction = ({ lelo }) => {
   const [togglePlay, setTogglePlay] = useState(false);
   const [operationInProgress, setOperationInProgress] = useState(false);
   const [deviceConnected, setDeviceConnected] = useState(true);
-  const [bypassGATT, setBypassGATT] = useState(true); // Add bypass state
+  const [bypassGATT, setBypassGATT] = useState(true);
+  const vibeOptions = useRef()
+  const mainOptions = useRef()
 
-  // Log GATT operation status
   const logGattOperation = (operationName, promise) => {
-    // console.log(`${operationName} started`);
+
     promise
       .then(() => {
-        // console.log(`${operationName} completed`);
       })
       .catch((error) => {
         console.error(`${operationName} failed:`, error);
       });
   };
 
-  // Function to write motor pattern data to the GATT characteristic
   const writeMotorPatternToGatt = async (motorType, motorPattern) => {
     if (bypassGATT) {
       // console.log('Bypass mode enabled, skipping GATT operation.');
-      return; // Skip GATT operation if bypass is enabled
+      return; 
     }
 
     if (!deviceConnected) {
@@ -53,7 +52,7 @@ const AdvancedMotorFunction = ({ lelo }) => {
       ]);
 
       const characteristic = await lelo.find(
-        (char) => char.uuid === '00000a1a-0000-1000-8000-00805f9b34fb' // Replace with correct UUID
+        (char) => char.uuid === '00000a1a-0000-1000-8000-00805f9b34fb'
       );
 
       if (!characteristic) {
@@ -61,14 +60,11 @@ const AdvancedMotorFunction = ({ lelo }) => {
         return;
       }
 
-      // Perform the write operation and log it
       const writePromise = characteristic.writeValue(data);
       logGattOperation(`Write Motor ${motorType === 1 ? 'Main' : 'Vibe'}`, writePromise);
 
-      // Await for the operation to complete
       await writePromise;
 
-      // console.log(`Motor pattern written successfully for motor type ${motorType === 1 ? 'main' : 'vibe'}`);
     } catch (error) {
       console.error('Error writing motor pattern:', error);
     } finally {
@@ -76,32 +72,25 @@ const AdvancedMotorFunction = ({ lelo }) => {
     }
   };
 
-  // Sequentially write motor patterns for both main and vibe motors
   const handleMotorOperations = async () => {
-    // Write for main motor first
     await writeMotorPatternToGatt(0x01, mainMotorAdv);
-    // Write for vibe motor after the main motor completes
     await writeMotorPatternToGatt(0x02, vibeMotorAdv);
   };
 
   const handlePauseMotors = async () => {
-    // Write for main motor first
     await writeMotorPatternToGatt(0x01, [0, 0, 0, 0, mainMotorAdv[4]]);
-    // Write for vibe motor after the main motor completes
     await writeMotorPatternToGatt(0x02, [0, 0, 0, 0, vibeMotorAdv[4]]);
   };
 
-  // Effect to trigger GATT operations when play/pause is toggled
   useEffect(() => {
     if (togglePlay && deviceConnected) {
-      handleMotorOperations(); // Ensure motor operations are done sequentially
+      handleMotorOperations();
     } else if (!togglePlay) {
       // console.log('Motor paused');
       handlePauseMotors();
     }
   }, [togglePlay, mainMotorAdv, vibeMotorAdv, deviceConnected]);
 
-  // Disconnect the device and stop operations
   const disconnectDevice = () => {
     if (lelo && lelo.gatt.connected) {
       lelo.gatt.disconnect();
@@ -115,19 +104,49 @@ const AdvancedMotorFunction = ({ lelo }) => {
   return (
     <div className='adv-motor-wrapper'>
      <Visualizer motors={[mainMotorAdv, vibeMotorAdv]} playPause={togglePlay}/>
- <section className="patterns">
-          <button onClick={() => setTogglePlay((prev) => !prev)}>
-            {togglePlay ? 'Pause' : 'Play'}
-          </button>
+    <section className="patterns">
+      <div className='button-wrapper'>
+        <button onClick={() => setTogglePlay((prev) => !prev)} disabled={operationInProgress}>
+          {togglePlay ? 'Pause' : 'Play'}
+        </button>
+        </div>
+        <section className='controls-wrapper'>
         <div className='input-wrapper'>
-          <h4>Main Motor Control</h4>
+        <i onClick={() => setMainMotorAdv([0,0,0,0,0])}class="fi fi-br-power"></i>
+          <h4>Upper Control</h4>
           <span>
+            <div ref={mainOptions}>
+              <i class="fi fi-sr-angle-circle-down"></i>
+              <div className='pattern-options'>
+                
+                <div className='option' value='0x02'>
+                  <img className='fi-option' src={'/wave-square.png'}/>
+                  <img className='fi-option' src={'/wave-square.png'}/>              
+                </div>
+
+                <div className='option' value='0x03'>
+                  <img className='fi-option' src={'/wave-square-rev.png'}/>
+                  <img className='fi-option' src={'/wave-square-rev.png'}/>              
+                </div>
+
+                <div className='option' value='0x04'>
+                  <img className='fi-option' src={'/sine.png'}/>
+                  <img className='fi-option' src={'/sine.png'}/>              
+                </div>
+
+                <div className='option' value='0x05'>
+                  <img className='fi-option' src={'/sine-rev.png'}/>
+                  <img className='fi-option' src={'/sine-rev.png'}/>              
+                </div>
+
+              </div>
+            </div>
           <select
         onChange={(e) => {
           const newPattern = e.target.value;
-          setMainMotorAdv((prev) => [...prev.slice(0, 4), newPattern]); // Update pattern in main motor
+          setMainMotorAdv((prev) => [...prev.slice(0, 4), newPattern]);
         }}
-      >
+        >
               <option value='0x02'>---___---___</option>
               <option value='0x03'>___---___---</option>
               <option value='0x04'>/\/\/\/\/\/\</option>
@@ -137,11 +156,18 @@ const AdvancedMotorFunction = ({ lelo }) => {
             </select>
             <h5>High Speed (Pmax)</h5>
             <CircularSlider
+                disabled={operationInProgress}
                 min={0}
                 max={100}
                 width={85}
                 label={'Pmax'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                dataIndex={mainMotorAdv[0]}
                 onChange={ value => { 
                   setMainMotorAdv((prev) => [
                     parseInt(value),
@@ -150,17 +176,23 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     prev[3],
                     prev[4]
                   ])}}
-              />
+                  />
           </span>
           <span>
             <h5>Low Speed (Pmin)</h5>
-
             <CircularSlider
+                disabled={operationInProgress}
                 min={0}
                 max={100}
                 width={85}
                 label={'Pmin'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                dataIndex={mainMotorAdv[1]}
                 onChange={ value => { 
                   setMainMotorAdv((prev) => [
                     prev[0],
@@ -169,18 +201,24 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     prev[3],
                     prev[4]
                   ])}}
-              />
+                  />
 
           </span>
           <span>
             <h5>Hold at High (T1)</h5>
-
             <CircularSlider
+                disabled={operationInProgress}
                 min={1}
                 max={1000}
                 width={85}
                 label={'T1'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                initialValue={mainMotorAdv[2]}
                 onChange={ value => { 
                   setMainMotorAdv((prev) => [
                     prev[0],
@@ -189,52 +227,81 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     prev[3],
                     prev[4]
                   ])}}
-              />
+                  />
           </span>
           <span>
             <h5>Hold at Low (T2)</h5>
-
-            <CircularSlider
-                min={1}
-                max={1000}
-                width={85}
-                label={'T2'}
-                continuous={false}
-                onChange={ value => { 
-                  setMainMotorAdv((prev) => [
-                    prev[0],
-                    prev[1],
-                    prev[2],
-                    parseInt(value),
-                    prev[4]
-                  ])}}
-              />
+          <CircularSlider
+              disabled={operationInProgress}
+              min={1}
+              max={1000}
+              width={85}
+              label={'T2'}
+              progressColorFrom='red'
+              progressColorTo='green'
+              trackSize={3}
+              valueFontSize='30px'
+              labelFontSize='0px'
+              knobColor='silver'
+              initialValue={mainMotorAdv[3]}
+            onChange={ value => {
+              if (parseInt(value) !== mainMotorAdv[3]) {
+              setMainMotorAdv((prev) => [
+              prev[0],
+              prev[1],
+              prev[2],
+              parseInt(value),
+              prev[4]
+              ]);
+              }
+            }}
+          />
           </span>
         </div>
 
         <div className='input-wrapper'>
-          <h4>Vibe Motor Control</h4>
+          <i onClick={()=> setVibeMotorAdv(mainMotorAdv)} class="fi fi-arrow fi-bs-arrow-right"></i>
+        </div>
+
+        <div className='input-wrapper'>
+          <i onClick={()=> setMainMotorAdv(vibeMotorAdv)} class="fi fi-arrow fi-bs-arrow-left"></i>
+        </div>
+
+        <div className='input-wrapper'>
+        <i onClick={() => setVibeMotorAdv([0,0,0,0,0])}class="fi fi-br-power"></i>
+          <h4>Lower Control</h4>
           <span>
           <select
         onChange={(e) => {
           const newPattern = e.target.value;
           setVibeMotorAdv((prev) => [...prev.slice(0, 4), newPattern]); // Update pattern in vibe motor
         }}
-      >
-              <option value='0x02'>---___---___</option>
+        >
+              <option value='0x02'>
+                <img src='/wave-square.png'/>
+              </option>
               <option value='0x03'>___---___---</option>
               <option value='0x04'>/\/\/\/\/\/\</option>
               <option value='0x05'>\/\/\/\/\/\/</option>
               <option value='0x06'>\\\\\\\\\\\\</option>
               <option value='0x07'>////////////</option>
             </select>
+            <div ref={vibeOptions}>
+            </div>
             <h5>High Speed (Pmax)</h5>
             <CircularSlider
+                disabled={operationInProgress}
                 min={0}
                 max={100}
                 width={85}
                 label={'Pmax'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                dataIndex={vibeMotorAdv[0]}
                 onChange={ value => { 
                   setVibeMotorAdv((prev) => [
                     parseInt(value),
@@ -243,17 +310,23 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     prev[3],
                     prev[4]
                   ])}}
-              />
+                  />
           </span>
           <span>
             <h5>Low Speed (Pmin)</h5>
-
             <CircularSlider
+                disabled={operationInProgress}
                 min={0}
                 max={100}
                 width={85}
                 label={'Pmin'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                dataIndex={vibeMotorAdv[1]}
                 onChange={ value => { 
                   setVibeMotorAdv((prev) => [
                     prev[0],
@@ -262,18 +335,24 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     prev[3],
                     prev[4]
                   ])}}
-              />
+                  />
 
           </span>
           <span>
             <h5>Hold at High (T1)</h5>
-
             <CircularSlider
+                disabled={operationInProgress}
                 min={1}
                 max={1000}
                 width={85}
                 label={'T1'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                initialValue={vibeMotorAdv[2]}
                 onChange={ value => { 
                   setVibeMotorAdv((prev) => [
                     prev[0],
@@ -282,17 +361,23 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     prev[3],
                     prev[4]
                   ])}}
-              />
+                  />
           </span>
           <span>
             <h5>Hold at Low (T2)</h5>
-
             <CircularSlider
+                disabled={operationInProgress}
                 min={1}
                 max={1000}
                 width={85}
                 label={'T2'}
-                continuous={false}
+                progressColorFrom='red'
+                progressColorTo='green'
+                trackSize={3}
+                valueFontSize='30px'
+                labelFontSize='0px'
+                knobColor='silver'
+                initialValue={vibeMotorAdv[3]}
                 onChange={ value => { 
                   setVibeMotorAdv((prev) => [
                     prev[0],
@@ -301,13 +386,13 @@ const AdvancedMotorFunction = ({ lelo }) => {
                     parseInt(value),
                     prev[4]
                   ])}}
-              />
+                  />
           </span>
         </div>
+        </section>
       </section>
 
       <div>
-        {/* Bypass Mode Toggle */}
         <label>
           <input
             type="checkbox"

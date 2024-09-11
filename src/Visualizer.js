@@ -95,10 +95,9 @@ const Visualizer = ({ motors, playPause }) => {
   }, [motors]);
 
   return (
-    <div>
+    <div className='visualizer-wrapper'>
       <div className='chart-wrapper'>
-        {/* Chart for Vibe Motor */}
-        <VictoryChart height={200} theme={VictoryTheme.material}
+        <VictoryChart height={160} width={1000} theme={VictoryTheme.material}
           domain={{
             x: [0, 2000], // Always display 2000 ms on the x-axis
             y: [0, 100]   // Motor speed range (0-100)
@@ -111,13 +110,13 @@ const Visualizer = ({ motors, playPause }) => {
             data={vibeData} 
             style={{
               labels: { opacity: 0 }, 
-              data: { stroke: 'blue' },
+              data: { stroke: 'white', strokeWidth: '10px' },
             }}
           />
         </VictoryChart>
 
         {/* Chart for Main Motor */}
-        <VictoryChart height={200} theme={VictoryTheme.material}
+        <VictoryChart height={160} width={1000}  theme={VictoryTheme.material}
           domain={{
             x: [0, 2000], // Always display 2000 ms on the x-axis
             y: [0, 100]   // Motor speed range (0-100)
@@ -130,7 +129,7 @@ const Visualizer = ({ motors, playPause }) => {
             data={mainData} // The data to plot for main motor
             style={{
               labels: { opacity: 0 }, // Hide labels
-              data: { stroke: 'green' }, // Customize line color for main motor
+              data: { stroke: 'white', strokeWidth: '10px' }, // Customize line color for main motor
             }}
           />
         </VictoryChart>
